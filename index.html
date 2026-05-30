@@ -4,484 +4,97 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Book Club Schedule</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/tabler-icons.min.css" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, sans-serif; background: #f7f7f5; color: #1a1a1a; min-height: 100vh; }
-  .app { max-width: 760px; margin: 0 auto; padding: 2rem 1rem; }
-  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 8px; }
-  .title { font-size: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-  .badge { font-size: 12px; padding: 3px 10px; border-radius: 6px; font-weight: 500; }
-  .badge-admin { background: #dbeafe; color: #1d4ed8; }
-  .badge-viewer { background: #f0f0ee; color: #666; }
-  .btn { font-size: 13px; padding: 6px 14px; border-radius: 7px; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
-  .btn:hover { background: #f0f0ee; }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-primary { background: #dbeafe; color: #1d4ed8; border-color: transparent; }
-  .btn-primary:hover { background: #bfdbfe; }
-  .btn-danger { background: #fee2e2; color: #b91c1c; border-color: transparent; }
-  .btn-danger:hover { background: #fecaca; }
-  .btn-success { background: #dcfce7; color: #166534; border-color: transparent; }
-  .btn-success:hover { background: #bbf7d0; }
-  .setup-panel { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
-  .setup-panel h3 { font-size: 14px; font-weight: 500; margin-bottom: 14px; }
-  .setup-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
-  .setup-field label { font-size: 12px; color: #666; }
-  .setup-field input { font-size: 13px; border: 0.5px solid #ccc; border-radius: 7px; padding: 7px 10px; background: #fff; color: #1a1a1a; }
-  .setup-field input:focus { outline: 2px solid #93c5fd; border-color: transparent; }
-  .hint { font-size: 11px; color: #999; margin-top: 2px; }
-  .chip { font-size: 12px; padding: 3px 9px; background: #dbeafe; color: #1d4ed8; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; margin: 3px 3px 0 0; }
-  .chip:hover { background: #bfdbfe; }
-  .bin-id-note { font-size: 11px; color: #999; margin-top: 8px; font-family: monospace; }
-  .add-row-form { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; padding: 12px; background: #f7f7f5; border-radius: 10px; border: 0.5px solid #e5e5e5; }
-  .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 90px; }
-  .field label { font-size: 12px; color: #666; }
-  .field input { font-size: 13px; border: 0.5px solid #ccc; border-radius: 7px; padding: 6px 10px; background: #fff; color: #1a1a1a; }
-  .field input:focus { outline: 2px solid #93c5fd; border-color: transparent; }
-  .table-wrap { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-  th { background: #f7f7f5; color: #666; font-weight: 500; font-size: 13px; padding: 10px 12px; text-align: left; border-bottom: 0.5px solid #e5e5e5; }
-  td { padding: 9px 12px; border-bottom: 0.5px solid #e5e5e5; color: #1a1a1a; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app { max-width: 680px; margin: 0 auto; padding: 2.5rem 1.25rem; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+  .meta { font-size: 13px; color: #888; margin-bottom: 1.75rem; }
+  .table-wrap { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 12px; overflow: hidden; margin-bottom: 1.25rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th { background: #f7f7f5; color: #666; font-weight: 500; font-size: 13px; padding: 11px 14px; text-align: left; border-bottom: 0.5px solid #e5e5e5; }
+  td { padding: 11px 14px; border-bottom: 0.5px solid #e5e5e5; color: #1a1a1a; }
   tr:last-child td { border-bottom: none; }
-  tr.editing-row td { background: #f7f7f5; }
-  td input[type=text] { font-size: 13px; border: 0.5px solid #ccc; border-radius: 6px; padding: 4px 8px; background: #fff; color: #1a1a1a; width: 100%; }
-  td input:focus { outline: 2px solid #93c5fd; border-color: transparent; }
-  .bottom-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-  .status { font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-  .dot-ok { background: #16a34a; }
-  .dot-busy { background: #d97706; }
-  .dot-err { background: #dc2626; }
-  .toast { position: fixed; top: 16px; right: 16px; background: #fff; border: 0.5px solid #ccc; border-radius: 10px; padding: 10px 16px; font-size: 13px; color: #1a1a1a; z-index: 999; max-width: 320px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-  @media (max-width: 500px) {
-    .add-row-form { flex-direction: column; }
-    .field { min-width: 100%; }
-  }
+  tr:nth-child(even) td { background: #fafaf8; }
+  .footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .updated { font-size: 12px; color: #aaa; }
+  .btn-print { font-size: 13px; padding: 8px 18px; border-radius: 8px; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-print:hover { background: #f0f0ee; }
+  .btn-print:active { transform: scale(0.98); }
+  .loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+  .error { text-align: center; padding: 40px; color: #c0392b; font-size: 14px; }
+  @media (max-width: 480px) { th, td { padding: 9px 10px; font-size: 14px; } }
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="header">
-    <div class="title"><i class="ti ti-book"></i> Book Club Schedule</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span class="badge badge-viewer" id="mode-badge">Viewer</span>
-      <button class="btn" onclick="toggleMode()"><i class="ti ti-shield"></i><span id="mode-btn-text">Switch to Admin</span></button>
-    </div>
-  </div>
+  <h1>📚 Book Club Schedule</h1>
+  <p class="meta" id="meta">Loading schedule…</p>
 
-  <!-- CONFIG PANEL -->
-  <div class="setup-panel" id="setup-panel" style="display:none">
-    <h3><i class="ti ti-settings" style="font-size:14px;vertical-align:-1px;margin-right:6px"></i>Configuration</h3>
-    <div class="setup-field">
-      <label>JSONBin Master API Key</label>
-      <input type="password" id="cfg-apikey" placeholder="$2b$10$..." />
-      <p class="hint">Find this at jsonbin.io → API Keys. Never stored — enter once per session.</p>
-    </div>
-    <div class="setup-field">
-      <label>Anthropic API Key (for Gmail email sending)</label>
-      <input type="password" id="cfg-anthropic" placeholder="sk-ant-..." />
-      <p class="hint">Required to send Gmail notifications. Get yours at console.anthropic.com.</p>
-    </div>
-    <div class="setup-field">
-      <label>Send emails from (your Gmail address)</label>
-      <input type="text" id="cfg-from" placeholder="you@gmail.com" />
-    </div>
-    <div class="setup-field">
-      <label>This page's public URL (included in emails)</label>
-      <input type="text" id="cfg-url" placeholder="https://yourusername.github.io/book-club/" />
-      <p class="hint">Recipients will see this link in every notification email.</p>
-    </div>
-    <div class="setup-field">
-      <label>Recipient emails — press Enter after each</label>
-      <input type="text" id="cfg-recip-input" placeholder="friend@example.com" onkeydown="handleRecipKey(event)" />
-      <div id="recipients-wrap" style="margin-top:4px"></div>
-    </div>
-    <div class="bin-id-note" id="bin-id-note"></div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn btn-primary" onclick="applyConfig()"><i class="ti ti-check"></i>Save config</button>
-      <button class="btn" onclick="document.getElementById('setup-panel').style.display='none'">Cancel</button>
-    </div>
-  </div>
-
-  <!-- ADD ROW FORM -->
-  <div id="add-row-section" style="display:none">
-    <div class="add-row-form">
-      <div class="field"><label>Date</label><input type="text" id="new-date" placeholder="e.g. Mar 5, 2026" /></div>
-      <div class="field"><label>Host</label><input type="text" id="new-host" placeholder="Name" /></div>
-      <div class="field"><label>Book</label><input type="text" id="new-book" placeholder="Title" /></div>
-      <div class="field"><label>Leader</label><input type="text" id="new-leader" placeholder="Name" /></div>
-      <div style="display:flex;gap:6px;margin-top:18px;flex-shrink:0">
-        <button class="btn btn-success" onclick="addRow()"><i class="ti ti-plus"></i>Add</button>
-        <button class="btn" onclick="cancelAdd()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TABLE -->
   <div class="table-wrap">
     <table>
-      <colgroup>
-        <col style="width:20%"><col style="width:20%"><col style="width:32%"><col style="width:18%">
-        <col id="actions-col-w" style="width:0;display:none">
-      </colgroup>
       <thead>
-        <tr>
-          <th>Date</th><th>Host</th><th>Book</th><th>Leader</th>
-          <th id="actions-th" style="display:none">Actions</th>
-        </tr>
+        <tr><th>Date</th><th>Host</th><th>Book</th><th>Leader</th></tr>
       </thead>
-      <tbody id="schedule-body"></tbody>
+      <tbody id="tbody">
+        <tr><td colspan="4" class="loading">Loading…</td></tr>
+      </tbody>
     </table>
   </div>
 
-  <!-- BOTTOM BAR -->
-  <div class="bottom-bar">
-    <div class="status">
-      <span class="dot dot-ok" id="status-dot"></span>
-      <span id="status-text">Ready</span>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="btn" id="add-row-btn" style="display:none" onclick="showAddRow()"><i class="ti ti-plus"></i>Add row</button>
-      <button class="btn" id="cfg-btn" style="display:none" onclick="openConfig()"><i class="ti ti-settings"></i>Configure</button>
-      <button class="btn btn-primary" id="save-btn" style="display:none" onclick="saveAndNotify()"><i class="ti ti-cloud-upload"></i>Save &amp; notify</button>
-      <button class="btn" onclick="downloadForPrinting()"><i class="ti ti-printer"></i>Download for printing</button>
-    </div>
+  <div class="footer">
+    <span class="updated" id="updated"></span>
+    <button class="btn-print" onclick="downloadForPrinting()">🖨 Download for printing</button>
   </div>
 </div>
 
-<div id="toast" class="toast" style="display:none"></div>
-
 <script>
-  let isAdmin = false;
+  // ── CONFIGURATION ──────────────────────────────────────────────────────────
+  // Replace these two values before uploading to GitHub Pages.
+  const JSONBIN_BIN_ID  = 'YOUR_BIN_ID_HERE';
+  const JSONBIN_API_KEY = 'YOUR_JSONBIN_API_KEY_HERE';
+  // ──────────────────────────────────────────────────────────────────────────
+
   let rows = [];
-  let changes = [];
-  let editingIdx = null;
-  let isSaving = false;
-  let cfg = { apiKey: '', anthropicKey: '', binId: '', from: '', pageUrl: '', recipients: [] };
-
-  function persist() {
-    try {
-      localStorage.setItem('bc_cfg', JSON.stringify({
-        binId: cfg.binId, from: cfg.from, pageUrl: cfg.pageUrl, recipients: cfg.recipients
-      }));
-    } catch(e) {}
-  }
-
-  function loadPersisted() {
-    try {
-      const s = JSON.parse(localStorage.getItem('bc_cfg') || '{}');
-      cfg.binId      = s.binId      || '';
-      cfg.from       = s.from       || '';
-      cfg.pageUrl    = s.pageUrl    || window.location.href;
-      cfg.recipients = s.recipients || [];
-    } catch(e) {}
-  }
-
-  function openConfig() {
-    document.getElementById('cfg-apikey').value    = cfg.apiKey       || '';
-    document.getElementById('cfg-anthropic').value = cfg.anthropicKey || '';
-    document.getElementById('cfg-from').value      = cfg.from         || '';
-    document.getElementById('cfg-url').value       = cfg.pageUrl      || window.location.href;
-    renderChips();
-    document.getElementById('bin-id-note').textContent =
-      cfg.binId ? 'Bin ID: ' + cfg.binId : 'No bin yet — will be created on first Save & notify.';
-    document.getElementById('setup-panel').style.display = 'block';
-  }
-
-  function applyConfig() {
-    cfg.apiKey       = document.getElementById('cfg-apikey').value.trim();
-    cfg.anthropicKey = document.getElementById('cfg-anthropic').value.trim();
-    cfg.from         = document.getElementById('cfg-from').value.trim();
-    cfg.pageUrl      = document.getElementById('cfg-url').value.trim() || window.location.href;
-    persist();
-    document.getElementById('setup-panel').style.display = 'none';
-    showToast('Configuration saved');
-    if (cfg.binId && cfg.apiKey) loadFromBin();
-    else setStatus('ok', 'Ready — hit Save & notify to begin');
-  }
-
-  function handleRecipKey(e) {
-    if (e.key === 'Enter') {
-      const v = e.target.value.trim();
-      if (v && v.includes('@') && !cfg.recipients.includes(v)) {
-        cfg.recipients.push(v);
-        e.target.value = '';
-        renderChips();
-      }
-    }
-  }
-  function removeRecip(i) { cfg.recipients.splice(i, 1); renderChips(); }
-  function renderChips() {
-    document.getElementById('recipients-wrap').innerHTML =
-      cfg.recipients.map((r, i) =>
-        `<span class="chip" onclick="removeRecip(${i})">${esc(r)} <i class="ti ti-x" style="font-size:11px"></i></span>`
-      ).join('');
-  }
-
-  function toggleMode() {
-    isAdmin = !isAdmin;
-    document.getElementById('mode-badge').textContent    = isAdmin ? 'Admin' : 'Viewer';
-    document.getElementById('mode-badge').className      = 'badge ' + (isAdmin ? 'badge-admin' : 'badge-viewer');
-    document.getElementById('mode-btn-text').textContent = isAdmin ? 'Switch to Viewer' : 'Switch to Admin';
-    ['add-row-btn','save-btn','cfg-btn'].forEach(id =>
-      document.getElementById(id).style.display = isAdmin ? '' : 'none'
-    );
-    document.getElementById('actions-th').style.display    = isAdmin ? '' : 'none';
-    document.getElementById('actions-col-w').style.display = isAdmin ? '' : 'none';
-    if (!isAdmin) { cancelAdd(); cancelEdit(); }
-    render();
-  }
-
-  function setStatus(state, text) {
-    document.getElementById('status-dot').className =
-      'dot ' + (state === 'ok' ? 'dot-ok' : state === 'busy' ? 'dot-busy' : 'dot-err');
-    document.getElementById('status-text').textContent = text;
-  }
-
-  let toastTimer = null;
-  function showToast(msg, dur = 3500) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.display = 'block';
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.style.display = 'none'; }, dur);
-  }
 
   function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  function render() {
-    const tbody = document.getElementById('schedule-body');
-    if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="${isAdmin ? 5 : 4}" style="text-align:center;color:#999;padding:28px">
-        No entries yet${isAdmin ? ' — click Add row to begin' : ''}</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = rows.map((row, i) => {
-      const editing = editingIdx === i;
-      const cells = ['host','book','leader'].map(col =>
-        editing
-          ? `<td><input type="text" id="ei-${col}-${i}" value="${esc(row[col])}" /></td>`
-          : `<td title="${esc(row[col])}">${esc(row[col])}</td>`
-      ).join('');
-      const actionTd = isAdmin ? `<td>${editing
-        ? `<button class="btn btn-success" onclick="doneEdit(${i})" style="padding:4px 10px;font-size:12px"><i class="ti ti-check"></i>Done</button>`
-        : `<div style="display:flex;gap:5px">
-             <button class="btn" onclick="startEdit(${i})" style="padding:4px 10px;font-size:12px"><i class="ti ti-edit"></i>Edit</button>
-             <button class="btn btn-danger" onclick="deleteRow(${i})" style="padding:4px 9px;font-size:12px" aria-label="Delete"><i class="ti ti-trash"></i></button>
-           </div>`
-      }</td>` : '';
-      return `<tr class="${editing ? 'editing-row' : ''}"><td>${esc(row.date)}</td>${cells}${actionTd}</tr>`;
-    }).join('');
-  }
-
-  function showAddRow() { document.getElementById('add-row-section').style.display = 'block'; }
-  function cancelAdd() {
-    document.getElementById('add-row-section').style.display = 'none';
-    ['date','host','book','leader'].forEach(f => { const el = document.getElementById('new-' + f); if (el) el.value = ''; });
-  }
-
-  function addRow() {
-    const date = document.getElementById('new-date').value.trim();
-    if (!date) { showToast('Please enter a date'); return; }
-    const host   = document.getElementById('new-host').value.trim();
-    const book   = document.getElementById('new-book').value.trim();
-    const leader = document.getElementById('new-leader').value.trim();
-    rows.push({ date, host, book, leader });
-    changes.push(`Added new row: Date="${date}", Host="${host}", Book="${book}", Leader="${leader}"`);
-    cancelAdd();
-    render();
-  }
-
-  function deleteRow(i) {
-    changes.push(`Deleted row for date "${rows[i].date}"`);
-    rows.splice(i, 1);
-    if (editingIdx === i) editingIdx = null;
-    render();
-  }
-
-  function startEdit(i) { editingIdx = i; render(); }
-  function cancelEdit()  { editingIdx = null; render(); }
-
-  function doneEdit(i) {
-    ['host','book','leader'].forEach(col => {
-      const el = document.getElementById(`ei-${col}-${i}`);
-      if (!el) return;
-      const newVal = el.value.trim();
-      if (newVal !== rows[i][col]) {
-        changes.push(`Row "${rows[i].date}" — ${col.charAt(0).toUpperCase() + col.slice(1)}: "${rows[i][col]}" → "${newVal}"`);
-        rows[i][col] = newVal;
-      }
-    });
-    editingIdx = null;
-    render();
-  }
-
-  async function loadFromBin() {
-    if (!cfg.binId || !cfg.apiKey) return;
-    setStatus('busy', 'Loading from JSONBin…');
+  async function loadSchedule() {
     try {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, {
-        headers: { 'X-Master-Key': cfg.apiKey }
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        headers: { 'X-Master-Key': JSONBIN_API_KEY }
       });
-      if (!res.ok) throw new Error('Load failed');
+      if (!res.ok) throw new Error('Could not load schedule (status ' + res.status + ')');
       const data = await res.json();
       rows = data.record.rows || [];
-      setStatus('ok', 'Loaded from JSONBin');
-    } catch(e) {
-      setStatus('err', 'Could not load — check API key');
+
+      const updatedAt = data.record.updatedAt
+        ? new Date(data.record.updatedAt).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' })
+        : null;
+
+      render(updatedAt);
+    } catch (e) {
+      document.getElementById('tbody').innerHTML =
+        `<tr><td colspan="4" class="error">Could not load schedule. Please try again later.</td></tr>`;
+      document.getElementById('meta').textContent = '';
     }
-    render();
   }
 
-  async function createBin() {
-    const res = await fetch('https://api.jsonbin.io/v3/b', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': cfg.apiKey,
-        'X-Bin-Name': 'book-club-schedule',
-        'X-Bin-Private': 'true'
-      },
-      body: JSON.stringify({ rows })
-    });
-    if (!res.ok) throw new Error('Could not create bin (check API key)');
-    const data = await res.json();
-    cfg.binId = data.metadata.id;
-    persist();
-  }
-
-  async function updateBin() {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.apiKey },
-      body: JSON.stringify({ rows })
-    });
-    if (!res.ok) throw new Error('Update failed');
-  }
-
-  // Build a plain-text + HTML table of the full schedule for emails
-  function buildTableEmail() {
-    const header = ['Date','Host','Book','Leader'];
-    const colW = [14, 14, 28, 14];
-    const pad = (s, w) => String(s).padEnd(w).slice(0, w);
-    const line = colW.map(w => '-'.repeat(w)).join('  ');
-    const txtHeader = header.map((h,i) => pad(h, colW[i])).join('  ');
-    const txtRows = rows.map(r =>
-      [r.date, r.host, r.book, r.leader].map((v,i) => pad(v||'', colW[i])).join('  ')
-    ).join('\n');
-    const plainTable = [txtHeader, line, txtRows].join('\n');
-
-    const htmlRows = rows.map(r =>
-      `<tr><td style="padding:7px 12px;border:1px solid #ddd">${esc(r.date)}</td>
-           <td style="padding:7px 12px;border:1px solid #ddd">${esc(r.host)}</td>
-           <td style="padding:7px 12px;border:1px solid #ddd">${esc(r.book)}</td>
-           <td style="padding:7px 12px;border:1px solid #ddd">${esc(r.leader)}</td></tr>`
-    ).join('');
-    const htmlTable = `<table style="border-collapse:collapse;font-size:14px;font-family:sans-serif">
-      <thead><tr>
-        <th style="padding:7px 12px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Date</th>
-        <th style="padding:7px 12px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Host</th>
-        <th style="padding:7px 12px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Book</th>
-        <th style="padding:7px 12px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Leader</th>
-      </tr></thead><tbody>${htmlRows}</tbody></table>`;
-
-    return { plainTable, htmlTable };
-  }
-
-  async function saveAndNotify() {
-    if (isSaving) return;
-    if (!cfg.apiKey) { showToast('Please configure your JSONBin API key first'); openConfig(); return; }
-    isSaving = true;
-    document.getElementById('save-btn').disabled = true;
-
-    const now      = new Date();
-    const dateStr  = now.toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' });
-    const changeList = changes.length ? [...changes] : ['Minor update'];
-
-    setStatus('busy', 'Saving to JSONBin…');
-    try {
-      if (!cfg.binId) await createBin();
-      else            await updateBin();
-      setStatus('ok', 'Saved');
-      changes = [];
-    } catch(e) {
-      setStatus('err', 'Save failed: ' + e.message);
-      showToast('Save failed: ' + e.message, 5000);
-      isSaving = false;
-      document.getElementById('save-btn').disabled = false;
-      return;
-    }
-
-    if (cfg.recipients.length > 0) {
-      await sendEmail(dateStr, changeList);
+  function render(updatedAt) {
+    const tbody = document.getElementById('tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#aaa;padding:32px">No upcoming meetings scheduled.</td></tr>`;
     } else {
-      showToast('Saved! Add recipients in Configure to enable email notifications.');
+      tbody.innerHTML = rows.map(r =>
+        `<tr><td>${esc(r.date)}</td><td>${esc(r.host)}</td><td>${esc(r.book)}</td><td>${esc(r.leader)}</td></tr>`
+      ).join('');
     }
-
-    isSaving = false;
-    document.getElementById('save-btn').disabled = false;
-  }
-
-  async function sendEmail(dateStr, changeList) {
-    if (!cfg.anthropicKey) {
-      showToast('Saved. Add your Anthropic API key in Configure to enable email sending.');
-      return;
-    }
-    setStatus('busy', 'Sending email…');
-
-    const subject      = `Book Club Schedule Update : ${dateStr}`;
-    const changeText   = changeList.join('\n• ');
-    const { plainTable, htmlTable } = buildTableEmail();
-    const pageLink     = cfg.pageUrl ? `\nView the schedule online: ${cfg.pageUrl}` : '';
-
-    const plainBody = `Changes made to:\n• ${changeText}\n\nCurrent schedule:\n\n${plainTable}${pageLink}\n\n— Book Club Schedule`;
-    const htmlBody  = `<p style="font-family:sans-serif;font-size:14px">Changes made to:</p>
-<ul style="font-family:sans-serif;font-size:14px">${changeList.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>
-<p style="font-family:sans-serif;font-size:14px;margin-top:16px"><strong>Current schedule:</strong></p>
-${htmlTable}
-${cfg.pageUrl ? `<p style="font-family:sans-serif;font-size:13px;margin-top:16px;color:#555">View online: <a href="${esc(cfg.pageUrl)}">${esc(cfg.pageUrl)}</a></p>` : ''}
-<p style="font-family:sans-serif;font-size:12px;color:#999;margin-top:24px">— Book Club Schedule</p>`;
-
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': cfg.anthropicKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: 'You are an email assistant. Send the described email via Gmail MCP. Reply ONLY with valid JSON: {"success":true} or {"success":false,"error":"reason"}. No markdown, no extra text.',
-          messages: [{
-            role: 'user',
-            content: `Send an email via Gmail with these details:\n\nTo: ${cfg.recipients.join(', ')}\nFrom: ${cfg.from}\nSubject: ${subject}\n\nPlain text body:\n${plainBody}\n\nHTML body:\n${htmlBody}\n\nReply with JSON only.`
-          }],
-          mcp_servers: [{ type: 'url', url: 'https://gmailmcp.googleapis.com/mcp/v1', name: 'gmail-mcp' }]
-        })
-      });
-
-      const data = await res.json();
-      const textBlock = data.content?.find(b => b.type === 'text');
-      const raw = (textBlock?.text || '').replace(/```json|```/g, '').trim();
-      let result = null;
-      try { result = JSON.parse(raw); } catch(e) {}
-
-      if (result?.success || raw.includes('"success":true') || raw.toLowerCase().includes('sent')) {
-        setStatus('ok', `Saved & emailed ${cfg.recipients.length} recipient(s)`);
-        showToast(`Saved & notified ${cfg.recipients.length} recipient(s) ✓`, 4000);
-      } else {
-        setStatus('err', 'Email uncertain');
-        showToast('Saved. Email delivery uncertain — check your Gmail sent folder.', 5000);
-      }
-    } catch(e) {
-      setStatus('err', 'Email error');
-      showToast('Saved. Email failed: ' + e.message, 5000);
-    }
+    document.getElementById('meta').textContent =
+      rows.length + ' meeting' + (rows.length !== 1 ? 's' : '') + ' scheduled';
+    document.getElementById('updated').textContent =
+      updatedAt ? 'Last updated: ' + updatedAt : '';
   }
 
   function downloadForPrinting() {
@@ -506,26 +119,13 @@ ${cfg.pageUrl ? `<p style="font-family:sans-serif;font-size:13px;margin-top:16px
 <table><thead><tr><th>Date</th><th>Host</th><th>Book</th><th>Leader</th></tr></thead>
 <tbody>${trs}</tbody></table>
 </body></html>`;
-    const blob = new Blob([html], { type: 'text/html' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
     a.download = `book-club-schedule-${today}.html`;
     a.click();
   }
 
-  // Init
-  loadPersisted();
-  if (cfg.binId) {
-    setStatus('ok', 'Enter your JSONBin API key in Configure to load data');
-    render();
-  } else {
-    rows = [
-      { date: 'Jan 15, 2026', host: 'Alice', book: 'The Midnight Library', leader: 'Bob'   },
-      { date: 'Feb 19, 2026', host: 'Carol', book: 'Lessons in Chemistry', leader: 'Alice' }
-    ];
-    render();
-    setStatus('ok', 'Sample data — configure to connect to JSONBin');
-  }
+  loadSchedule();
 </script>
 </body>
 </html>
