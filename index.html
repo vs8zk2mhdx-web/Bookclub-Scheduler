@@ -4,128 +4,451 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Book Club Schedule</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/tabler-icons.min.css" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, sans-serif; background: #f7f7f5; color: #1a1a1a; min-height: 100vh; }
-  .app { max-width: 680px; margin: 0 auto; padding: 2.5rem 1.25rem; }
-  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
-  .meta { font-size: 13px; color: #888; margin-bottom: 1.75rem; }
-  .table-wrap { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 12px; overflow: hidden; margin-bottom: 1.25rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  th { background: #f7f7f5; color: #666; font-weight: 500; font-size: 13px; padding: 11px 14px; text-align: left; border-bottom: 0.5px solid #e5e5e5; }
-  td { padding: 11px 14px; border-bottom: 0.5px solid #e5e5e5; color: #1a1a1a; }
+  .app { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem; }
+  h1 { font-size: 22px; font-weight: 500; }
+  .meta { font-size: 13px; color: #999; margin-bottom: 1.5rem; }
+  .btn { font-size: 13px; padding: 6px 14px; border-radius: 8px; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.12s; }
+  .btn:hover { background: #f0f0ee; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: #dbeafe; color: #1d4ed8; border-color: transparent; }
+  .btn-primary:hover { background: #bfdbfe; }
+  .btn-danger { background: #fee2e2; color: #b91c1c; border-color: transparent; }
+  .btn-danger:hover { background: #fecaca; }
+  .btn-success { background: #dcfce7; color: #166534; border-color: transparent; }
+  .btn-success:hover { background: #bbf7d0; }
+  .btn-admin { font-size: 11px; padding: 3px 10px; border-radius: 6px; background: transparent; border: 0.5px solid #ddd; color: #bbb; cursor: pointer; }
+  .btn-admin:hover { color: #888; border-color: #bbb; background: transparent; }
+  .panel { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .panel h3 { font-size: 14px; font-weight: 500; margin-bottom: 14px; color: #1a1a1a; }
+  .sf { display: flex; flex-direction: column; gap: 4px; margin-bottom: 11px; }
+  .sf label { font-size: 12px; color: #666; }
+  .sf input { font-size: 13px; border: 0.5px solid #ccc; border-radius: 7px; padding: 7px 10px; background: #fff; color: #1a1a1a; }
+  .sf input:focus { outline: 2px solid #93c5fd; border-color: transparent; }
+  .hint { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .chip { font-size: 12px; padding: 3px 9px; background: #dbeafe; color: #1d4ed8; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; margin: 3px 3px 0 0; }
+  .chip:hover { background: #bfdbfe; }
+  .add-form { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; padding: 12px; background: #f7f7f5; border-radius: 10px; border: 0.5px solid #e5e5e5; }
+  .field { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 85px; }
+  .field label { font-size: 11px; color: #666; }
+  .field input { font-size: 13px; border: 0.5px solid #ccc; border-radius: 7px; padding: 6px 9px; background: #fff; color: #1a1a1a; }
+  .field input:focus { outline: 2px solid #93c5fd; border-color: transparent; }
+  .table-wrap { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+  th { background: #f7f7f5; color: #666; font-weight: 500; font-size: 13px; padding: 10px 12px; text-align: left; border-bottom: 0.5px solid #e5e5e5; }
+  td { padding: 10px 12px; border-bottom: 0.5px solid #e5e5e5; color: #1a1a1a; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   tr:last-child td { border-bottom: none; }
-  tr:nth-child(even) td { background: #fafaf8; }
-  .footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-  .updated { font-size: 12px; color: #aaa; }
-  .btn-print { font-size: 13px; padding: 8px 18px; border-radius: 8px; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-  .btn-print:hover { background: #f0f0ee; }
-  .btn-print:active { transform: scale(0.98); }
-  .loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
-  .error { text-align: center; padding: 40px; color: #c0392b; font-size: 14px; }
-  @media (max-width: 480px) { th, td { padding: 9px 10px; font-size: 14px; } }
+  tr.editing-row td { background: #f7f7f5; }
+  td input[type=text] { font-size: 13px; border: 0.5px solid #ccc; border-radius: 6px; padding: 4px 8px; background: #fff; color: #1a1a1a; width: 100%; }
+  td input:focus { outline: 2px solid #93c5fd; border-color: transparent; }
+  .footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .status { font-size: 12px; color: #999; display: flex; align-items: center; gap: 5px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-ok { background: #16a34a; } .dot-busy { background: #d97706; } .dot-err { background: #dc2626; }
+  .toast { position: fixed; top: 16px; right: 16px; background: #fff; border: 0.5px solid #ccc; border-radius: 10px; padding: 10px 16px; font-size: 13px; color: #1a1a1a; z-index: 999; max-width: 320px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: none; }
+  .badge-admin { font-size: 11px; padding: 2px 8px; border-radius: 5px; background: #dbeafe; color: #1d4ed8; font-weight: 500; margin-left: 8px; }
+  .cal-wrap { position: relative; display: inline-block; width: 100%; }
+  .cal-popup { position: absolute; top: calc(100% + 4px); left: 0; z-index: 200; background: #fff; border: 0.5px solid #ccc; border-radius: 10px; padding: 10px; width: 224px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .cal-popup.open { display: block; }
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .cal-header span { font-size: 12px; font-weight: 500; }
+  .cal-nav { background: none; border: none; cursor: pointer; color: #666; font-size: 16px; padding: 2px 7px; border-radius: 6px; }
+  .cal-nav:hover { background: #f0f0ee; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+  .cal-dow { font-size: 10px; color: #aaa; text-align: center; padding: 2px 0; }
+  .cal-day { font-size: 12px; text-align: center; padding: 5px 2px; border-radius: 6px; cursor: pointer; color: #1a1a1a; }
+  .cal-day:hover { background: #f0f0ee; }
+  .cal-day.is-today { font-weight: 600; color: #1d4ed8; }
+  .cal-day.is-selected { background: #dbeafe; color: #1d4ed8; }
+  .cal-day.empty { cursor: default; }
+  .cal-day.empty:hover { background: none; }
+  @media (max-width: 500px) { .add-form { flex-direction: column; } .field { min-width: 100%; } }
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>📚 Book Club Schedule</h1>
+
+  <div class="page-header">
+    <h1>📚 Book Club Schedule<span class="badge-admin" id="admin-badge" style="display:none">Admin</span></h1>
+    <button class="btn-admin" id="admin-toggle" onclick="toggleAdmin()">Admin</button>
+  </div>
   <p class="meta" id="meta">Loading schedule…</p>
 
+  <!-- ADMIN: config panel -->
+  <div class="panel" id="cfg-panel" style="display:none">
+    <h3>⚙️ Configuration</h3>
+    <div class="sf">
+      <label>JSONBin Master API Key</label>
+      <input type="password" id="cfg-key" placeholder="$2a$10$..." />
+      <p class="hint">Stored in your browser only — never sent anywhere except JSONBin.</p>
+    </div>
+    <div class="sf">
+      <label>JSONBin Bin ID</label>
+      <input type="text" id="cfg-binid" placeholder="6a1b6290ddf5aa59f779c5ed" />
+      <p class="hint">Leave blank to auto-create a new bin on first save.</p>
+    </div>
+    <div class="sf">
+      <label>This page's URL (included in notification emails)</label>
+      <input type="text" id="cfg-pageurl" placeholder="https://yourusername.github.io/book-club/" />
+    </div>
+    <div class="sf">
+      <label>Send notifications from (your Gmail address)</label>
+      <input type="text" id="cfg-from" placeholder="you@gmail.com" />
+    </div>
+    <div class="sf">
+      <label>Anthropic API Key (for Gmail notifications)</label>
+      <input type="password" id="cfg-anthropic" placeholder="sk-ant-..." />
+      <p class="hint">Get yours at console.anthropic.com. Never stored.</p>
+    </div>
+    <div class="sf">
+      <label>Recipients — press Enter after each email</label>
+      <input type="text" id="cfg-recip-input" placeholder="friend@example.com" onkeydown="handleRecipKey(event)" />
+      <div id="recip-wrap" style="margin-top:5px"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-primary" onclick="saveConfig()"><i class="ti ti-check"></i>Save config</button>
+      <button class="btn" onclick="document.getElementById('cfg-panel').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <!-- ADMIN: add row form -->
+  <div id="add-section" style="display:none">
+    <div class="add-form">
+      <div class="field">
+        <label>Date</label>
+        <div class="cal-wrap">
+          <input type="text" id="new-date" placeholder="Pick a date" readonly onclick="toggleCal('add-cal')" />
+          <div class="cal-popup" id="add-cal"></div>
+        </div>
+      </div>
+      <div class="field"><label>Host</label><input type="text" id="new-host" placeholder="Name" /></div>
+      <div class="field"><label>Book</label><input type="text" id="new-book" placeholder="Title" /></div>
+      <div class="field"><label>Leader</label><input type="text" id="new-leader" placeholder="Name" /></div>
+      <div style="display:flex;gap:6px;margin-top:16px;flex-shrink:0">
+        <button class="btn btn-success" onclick="addRow()"><i class="ti ti-plus"></i>Add</button>
+        <button class="btn" onclick="cancelAdd()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
   <div class="table-wrap">
     <table>
+      <colgroup>
+        <col style="width:19%"><col style="width:19%"><col style="width:31%"><col style="width:18%">
+        <col id="actions-col" style="width:13%;display:none">
+      </colgroup>
       <thead>
-        <tr><th>Date</th><th>Host</th><th>Book</th><th>Leader</th></tr>
+        <tr>
+          <th>Date</th><th>Host</th><th>Book</th><th>Leader</th>
+          <th id="actions-th" style="display:none">Actions</th>
+        </tr>
       </thead>
-      <tbody id="tbody">
-        <tr><td colspan="4" class="loading">Loading…</td></tr>
-      </tbody>
+      <tbody id="tbody"></tbody>
     </table>
   </div>
 
+  <!-- FOOTER -->
   <div class="footer">
-    <span class="updated" id="updated"></span>
-    <button class="btn-print" onclick="downloadForPrinting()">🖨 Download for printing</button>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <div class="status"><span class="dot dot-ok" id="sdot"></span><span id="stxt">Loading…</span></div>
+      <div style="font-size:12px;color:#bbb" id="updated-label"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="cfg-btn" style="display:none" onclick="openConfig()"><i class="ti ti-settings"></i>Configure</button>
+      <button class="btn" id="add-btn" style="display:none" onclick="showAdd()"><i class="ti ti-plus"></i>Add row</button>
+      <button class="btn btn-primary" id="save-btn" style="display:none" onclick="saveAndNotify()"><i class="ti ti-cloud-upload"></i>Save &amp; notify</button>
+      <button class="btn" onclick="downloadForPrinting()"><i class="ti ti-printer"></i>Download for printing</button>
+    </div>
   </div>
+
 </div>
+<div id="toast" class="toast"></div>
 
 <script>
-  // ── CONFIGURATION ──────────────────────────────────────────────────────────
-  // Replace these two values before uploading to GitHub Pages.
-  const JSONBIN_BIN_ID  = '6a1b6290ddf5aa59f779c5ed';
-  const JSONBIN_API_KEY = '$2a$10$ihQz8S8Ud.ak0XSZWGGHiuNK78rse4XpeF06lZNhT0ii6ydG9hNDe';
-  // ──────────────────────────────────────────────────────────────────────────
+  // ── State ────────────────────────────────────────────────────────────────
+  let rows = [], changes = [], editIdx = null, saving = false, isAdmin = false;
+  let cfg = { key:'', binId:'', pageUrl:'', from:'', anthropicKey:'', recipients:[] };
+  let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 
-  let rows = [];
-
-  function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // ── Persist (non-sensitive only) ─────────────────────────────────────────
+  function persist() {
+    try { localStorage.setItem('bc_v4', JSON.stringify({ binId:cfg.binId, pageUrl:cfg.pageUrl, from:cfg.from, recipients:cfg.recipients })); } catch(e){}
+  }
+  function loadPersisted() {
+    try {
+      const s = JSON.parse(localStorage.getItem('bc_v4') || '{}');
+      cfg.binId = s.binId || ''; cfg.pageUrl = s.pageUrl || '';
+      cfg.from = s.from || ''; cfg.recipients = s.recipients || [];
+    } catch(e){}
   }
 
-  async function loadSchedule() {
+  // ── Admin toggle ─────────────────────────────────────────────────────────
+  function toggleAdmin() {
+    isAdmin = !isAdmin;
+    document.getElementById('admin-badge').style.display = isAdmin ? '' : 'none';
+    document.getElementById('admin-toggle').textContent = isAdmin ? 'Exit admin' : 'Admin';
+    ['cfg-btn','add-btn','save-btn'].forEach(id => document.getElementById(id).style.display = isAdmin ? '' : 'none');
+    document.getElementById('actions-th').style.display = isAdmin ? '' : 'none';
+    document.getElementById('actions-col').style.display = isAdmin ? '' : 'none';
+    if (!isAdmin) { cancelAdd(); editIdx = null; }
+    render();
+  }
+
+  // ── Config ───────────────────────────────────────────────────────────────
+  function openConfig() {
+    document.getElementById('cfg-key').value = cfg.key || '';
+    document.getElementById('cfg-binid').value = cfg.binId || '';
+    document.getElementById('cfg-pageurl').value = cfg.pageUrl || window.location.href;
+    document.getElementById('cfg-from').value = cfg.from || '';
+    document.getElementById('cfg-anthropic').value = cfg.anthropicKey || '';
+    renderChips();
+    document.getElementById('cfg-panel').style.display = 'block';
+  }
+  function saveConfig() {
+    cfg.key = document.getElementById('cfg-key').value.trim();
+    cfg.binId = document.getElementById('cfg-binid').value.trim();
+    cfg.pageUrl = document.getElementById('cfg-pageurl').value.trim() || window.location.href;
+    cfg.from = document.getElementById('cfg-from').value.trim();
+    cfg.anthropicKey = document.getElementById('cfg-anthropic').value.trim();
+    persist();
+    document.getElementById('cfg-panel').style.display = 'none';
+    showToast('Configuration saved');
+    if (cfg.binId && cfg.key) loadBin();
+  }
+
+  function handleRecipKey(e) {
+    if (e.key === 'Enter') {
+      const v = e.target.value.trim();
+      if (v && v.includes('@') && !cfg.recipients.includes(v)) { cfg.recipients.push(v); e.target.value = ''; renderChips(); }
+    }
+  }
+  function removeRecip(i) { cfg.recipients.splice(i,1); renderChips(); }
+  function renderChips() {
+    document.getElementById('recip-wrap').innerHTML = cfg.recipients.map((r,i) =>
+      `<span class="chip" onclick="removeRecip(${i})">${esc(r)} <i class="ti ti-x" style="font-size:11px"></i></span>`).join('');
+  }
+
+  // ── Status / Toast ────────────────────────────────────────────────────────
+  function setStatus(s, t) {
+    document.getElementById('sdot').className = 'dot dot-' + (s==='ok'?'ok':s==='busy'?'busy':'err');
+    document.getElementById('stxt').textContent = t;
+  }
+  let toastT = null;
+  function showToast(m, d=3500) {
+    const el = document.getElementById('toast'); el.textContent = m; el.style.display = 'block';
+    clearTimeout(toastT); toastT = setTimeout(() => el.style.display='none', d);
+  }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  function render() {
+    const tb = document.getElementById('tbody');
+    if (!rows.length) {
+      tb.innerHTML = `<tr><td colspan="${isAdmin?5:4}" style="text-align:center;color:#aaa;padding:28px">No upcoming meetings scheduled${isAdmin?' — click Add row':''}</td></tr>`;
+      return;
+    }
+    tb.innerHTML = rows.map((r,i) => {
+      const ed = editIdx === i;
+      const dateTd = ed
+        ? `<td><div class="cal-wrap"><input type="text" id="ei-date-${i}" value="${esc(r.date)}" readonly onclick="toggleCal('ed-cal-${i}')" style="width:100%" /><div class="cal-popup" id="ed-cal-${i}"></div></div></td>`
+        : `<td>${esc(r.date)}</td>`;
+      const cells = ['host','book','leader'].map(c => ed
+        ? `<td><input type="text" id="ei-${c}-${i}" value="${esc(r[c])}" /></td>`
+        : `<td>${esc(r[c])}</td>`).join('');
+      const acts = isAdmin ? `<td>${ed
+        ? `<button class="btn btn-success" onclick="doneEdit(${i})" style="padding:3px 9px;font-size:12px"><i class="ti ti-check"></i>Done</button>`
+        : `<div style="display:flex;gap:5px">
+             <button class="btn" onclick="startEdit(${i})" style="padding:3px 8px;font-size:12px" aria-label="Edit"><i class="ti ti-edit"></i></button>
+             <button class="btn btn-danger" onclick="deleteRow(${i})" style="padding:3px 8px;font-size:12px" aria-label="Delete"><i class="ti ti-trash"></i></button>
+           </div>`
+      }</td>` : '';
+      return `<tr class="${ed?'editing-row':''}">${dateTd}${cells}${acts}</tr>`;
+    }).join('');
+    if (editIdx !== null) buildCal(`ed-cal-${editIdx}`, document.getElementById(`ei-date-${editIdx}`), calYear, calMonth);
+  }
+
+  // ── Add / Edit / Delete ───────────────────────────────────────────────────
+  function showAdd() { document.getElementById('add-section').style.display='block'; buildCal('add-cal', document.getElementById('new-date'), calYear, calMonth); }
+  function cancelAdd() {
+    document.getElementById('add-section').style.display='none'; closeCals();
+    ['date','host','book','leader'].forEach(f => { const el=document.getElementById('new-'+f); if(el) el.value=''; });
+  }
+  function addRow() {
+    const date = document.getElementById('new-date').value.trim();
+    if (!date) { showToast('Please pick a date'); return; }
+    const host = document.getElementById('new-host').value.trim();
+    const book = document.getElementById('new-book').value.trim();
+    const leader = document.getElementById('new-leader').value.trim();
+    rows.push({date, host, book, leader});
+    changes.push(`Added row: Date="${date}", Host="${host}", Book="${book}", Leader="${leader}"`);
+    cancelAdd(); render();
+  }
+  function deleteRow(i) {
+    if (!confirm(`Delete the row for "${rows[i].date}"?`)) return;
+    changes.push(`Deleted row for date "${rows[i].date}"`);
+    rows.splice(i,1); if (editIdx===i) editIdx=null; render();
+  }
+  function startEdit(i) { editIdx=i; calYear=new Date().getFullYear(); calMonth=new Date().getMonth(); render(); }
+  function doneEdit(i) {
+    const dateEl = document.getElementById(`ei-date-${i}`);
+    if (dateEl) { const nv=dateEl.value.trim(); if(nv&&nv!==rows[i].date){changes.push(`Row "${rows[i].date}" — Date → "${nv}"`);rows[i].date=nv;} }
+    ['host','book','leader'].forEach(c => {
+      const el = document.getElementById(`ei-${c}-${i}`); if (!el) return;
+      const nv = el.value.trim();
+      if (nv !== rows[i][c]) { changes.push(`Row "${rows[i].date}" — ${c.charAt(0).toUpperCase()+c.slice(1)}: "${rows[i][c]}" → "${nv}"`); rows[i][c]=nv; }
+    });
+    editIdx=null; render();
+  }
+
+  // ── JSONBin ───────────────────────────────────────────────────────────────
+  async function loadBin() {
+    if (!cfg.binId || !cfg.key) return;
+    setStatus('busy','Loading…');
     try {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-        headers: { 'X-Master-Key': JSONBIN_API_KEY }
-      });
-      if (!res.ok) throw new Error('Could not load schedule (status ' + res.status + ')');
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, { headers:{'X-Master-Key':cfg.key} });
+      if (!res.ok) throw new Error('HTTP '+res.status);
       const data = await res.json();
       rows = data.record.rows || [];
-
-      const updatedAt = data.record.updatedAt
-        ? new Date(data.record.updatedAt).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' })
-        : null;
-
-      render(updatedAt);
-    } catch (e) {
-      document.getElementById('tbody').innerHTML =
-        `<tr><td colspan="4" class="error">Could not load schedule. Please try again later.</td></tr>`;
-      document.getElementById('meta').textContent = '';
-    }
+      const upd = data.record.updatedAt ? new Date(data.record.updatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'}) : null;
+      document.getElementById('updated-label').textContent = upd ? 'Last updated: '+upd : '';
+      setStatus('ok', rows.length + ' meeting' + (rows.length!==1?'s':'') + ' scheduled');
+      document.getElementById('meta').textContent = rows.length + ' meeting' + (rows.length!==1?'s':'') + ' scheduled';
+    } catch(e) { setStatus('err','Could not load schedule'); }
+    render();
   }
-
-  function render(updatedAt) {
-    const tbody = document.getElementById('tbody');
-    if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#aaa;padding:32px">No upcoming meetings scheduled.</td></tr>`;
+  async function saveBin() {
+    const payload = JSON.stringify({rows, updatedAt: new Date().toISOString()});
+    if (!cfg.binId) {
+      const res = await fetch('https://api.jsonbin.io/v3/b', {method:'POST', headers:{'Content-Type':'application/json','X-Master-Key':cfg.key,'X-Bin-Name':'book-club','X-Bin-Private':'true'}, body:payload});
+      if (!res.ok) throw new Error('Create failed: HTTP '+res.status);
+      const data = await res.json(); cfg.binId = data.metadata.id; persist();
     } else {
-      tbody.innerHTML = rows.map(r =>
-        `<tr><td>${esc(r.date)}</td><td>${esc(r.host)}</td><td>${esc(r.book)}</td><td>${esc(r.leader)}</td></tr>`
-      ).join('');
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':cfg.key}, body:payload});
+      if (!res.ok) throw new Error('Update failed: HTTP '+res.status);
     }
-    document.getElementById('meta').textContent =
-      rows.length + ' meeting' + (rows.length !== 1 ? 's' : '') + ' scheduled';
-    document.getElementById('updated').textContent =
-      updatedAt ? 'Last updated: ' + updatedAt : '';
   }
 
+  // ── Email ─────────────────────────────────────────────────────────────────
+  function buildEmailContent(dateStr, cl) {
+    const htmlRows = rows.map(r=>`<tr><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.date)}</td><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.host)}</td><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.book)}</td><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.leader)}</td></tr>`).join('');
+    const htmlTable = `<table style="border-collapse:collapse;font-size:14px;font-family:sans-serif"><thead><tr><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Date</th><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Host</th><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Book</th><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Leader</th></tr></thead><tbody>${htmlRows}</tbody></table>`;
+    const linkHtml = cfg.pageUrl ? `<p style="font-family:sans-serif;font-size:13px;margin-top:14px;color:#555">View online: <a href="${esc(cfg.pageUrl)}">${esc(cfg.pageUrl)}</a></p>` : '';
+    const htmlBody = `<p style="font-family:sans-serif;font-size:14px">Changes made to:</p><ul style="font-family:sans-serif;font-size:14px">${cl.map(c=>`<li>${esc(c)}</li>`).join('')}</ul><p style="font-family:sans-serif;font-size:14px;margin-top:14px"><strong>Current schedule:</strong></p>${htmlTable}${linkHtml}<p style="font-family:sans-serif;font-size:12px;color:#999;margin-top:20px">— Book Club Schedule</p>`;
+    const pad = (s,w) => String(s).padEnd(w).slice(0,w);
+    const plainTable = [['Date','Host','Book','Leader'].map((h,i)=>pad(h,[14,14,28,14][i])).join('  '), '-'.repeat(74), rows.map(r=>[r.date,r.host,r.book,r.leader].map((v,i)=>pad(v||'',[14,14,28,14][i])).join('  ')).join('\n')].join('\n');
+    const plainBody = `Changes made to:\n• ${cl.join('\n• ')}\n\nCurrent schedule:\n\n${plainTable}${cfg.pageUrl?'\nView online: '+cfg.pageUrl:''}\n\n— Book Club Schedule`;
+    return { subject:`Book Club Schedule Update : ${dateStr}`, htmlBody, plainBody };
+  }
+
+  // ── Save & Notify ─────────────────────────────────────────────────────────
+  async function saveAndNotify() {
+    if (saving) return;
+    if (!cfg.key) { showToast('Please open Configure and enter your JSONBin API key'); openConfig(); return; }
+    saving = true; document.getElementById('save-btn').disabled = true;
+    const dateStr = new Date().toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'});
+    const cl = changes.length ? [...changes] : ['Minor update'];
+    setStatus('busy','Saving…');
+    try {
+      await saveBin(); changes = [];
+      document.getElementById('updated-label').textContent = 'Last updated: '+dateStr;
+      setStatus('ok','Saved ✓');
+      showToast('Saved to JSONBin ✓');
+    } catch(e) {
+      setStatus('err','Save failed: '+e.message);
+      showToast('Save failed: '+e.message, 5000);
+      saving=false; document.getElementById('save-btn').disabled=false; return;
+    }
+    if (cfg.recipients.length && cfg.anthropicKey) {
+      await sendEmail(dateStr, cl);
+    } else if (cfg.recipients.length && !cfg.anthropicKey) {
+      showToast('Saved. Add your Anthropic API key in Configure to enable email notifications.', 5000);
+    } else {
+      showToast('Saved. Add recipients in Configure to enable email notifications.');
+    }
+    saving=false; document.getElementById('save-btn').disabled=false;
+  }
+
+  async function sendEmail(dateStr, cl) {
+    setStatus('busy','Sending email…');
+    const { subject, htmlBody, plainBody } = buildEmailContent(dateStr, cl);
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':cfg.anthropicKey,'anthropic-version':'2023-06-01'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514', max_tokens:1000,
+          system:'Send the email via Gmail MCP. Reply ONLY with JSON: {"success":true} or {"success":false}. No markdown.',
+          messages:[{role:'user',content:`Send via Gmail:\nTo: ${cfg.recipients.join(', ')}\nFrom: ${cfg.from}\nSubject: ${subject}\nPlain body:\n${plainBody}\nHTML body:\n${htmlBody}\nJSON reply only.`}],
+          mcp_servers:[{type:'url',url:'https://gmailmcp.googleapis.com/mcp/v1',name:'gmail-mcp'}]
+        })
+      });
+      const data = await res.json();
+      const raw = (data.content?.find(b=>b.type==='text')?.text||'').replace(/```json|```/g,'').trim();
+      let ok=false; try{ok=JSON.parse(raw)?.success}catch(e){ok=raw.includes('"success":true')||raw.toLowerCase().includes('sent')}
+      if (ok) { setStatus('ok',`Saved & emailed ${cfg.recipients.length} recipient(s) ✓`); showToast(`Notified ${cfg.recipients.length} recipient(s) ✓`,4000); }
+      else { setStatus('err','Email uncertain'); showToast('Saved. Email delivery uncertain — check Gmail sent folder.',5000); }
+    } catch(e) { setStatus('err','Email error'); showToast('Saved. Email failed: '+e.message,5000); }
+  }
+
+  // ── Download for printing ─────────────────────────────────────────────────
   function downloadForPrinting() {
     const today = new Date().toLocaleDateString('en-CA');
-    const trs = rows.map(r =>
-      `<tr><td>${esc(r.date)}</td><td>${esc(r.host)}</td><td>${esc(r.book)}</td><td>${esc(r.leader)}</td></tr>`
-    ).join('');
-    const html = `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>Book Club Schedule</title>
-<style>
-  body { font-family: Georgia, serif; padding: 2rem; max-width: 680px; margin: 0 auto; }
-  h1 { font-size: 22px; margin-bottom: 4px; }
-  .sub { color: #666; font-size: 13px; margin-bottom: 1.5rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { background: #f4f4f2; padding: 10px 12px; text-align: left; border: 1px solid #ddd; font-weight: 600; }
-  td { padding: 9px 12px; border: 1px solid #ddd; }
-  tr:nth-child(even) td { background: #fafaf8; }
-  @media print { body { padding: 0; } }
-</style></head><body>
-<h1>Book Club Schedule</h1>
-<p class="sub">Downloaded ${today}</p>
-<table><thead><tr><th>Date</th><th>Host</th><th>Book</th><th>Leader</th></tr></thead>
-<tbody>${trs}</tbody></table>
-</body></html>`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-    a.download = `book-club-schedule-${today}.html`;
-    a.click();
+    const trs = rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.host)}</td><td>${esc(r.book)}</td><td>${esc(r.leader)}</td></tr>`).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Book Club Schedule</title><style>body{font-family:Georgia,serif;padding:2rem;max-width:680px;margin:0 auto}h1{font-size:22px;margin-bottom:4px}.sub{color:#666;font-size:13px;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:14px}th{background:#f4f4f2;padding:10px 12px;text-align:left;border:1px solid #ddd;font-weight:600}td{padding:9px 12px;border:1px solid #ddd}tr:nth-child(even) td{background:#fafaf8}@media print{body{padding:0}}</style></head><body><h1>Book Club Schedule</h1><p class="sub">Downloaded ${today}</p><table><thead><tr><th>Date</th><th>Host</th><th>Book</th><th>Leader</th></tr></thead><tbody>${trs}</tbody></table></body></html>`;
+    const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([html],{type:'text/html'})); a.download=`book-club-schedule-${today}.html`; a.click();
   }
 
-  loadSchedule();
+  // ── Calendar ──────────────────────────────────────────────────────────────
+  function closeCals() { document.querySelectorAll('.cal-popup').forEach(p=>p.classList.remove('open')); }
+  function toggleCal(id) {
+    const p=document.getElementById(id); if(!p) return;
+    const was=p.classList.contains('open'); closeCals();
+    if (!was) { p.classList.add('open'); buildCal(id, p.previousElementSibling, calYear, calMonth); }
+  }
+  function buildCal(popupId, inp, year, month) {
+    const popup=document.getElementById(popupId); if(!popup) return;
+    const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DW=['Su','Mo','Tu','We','Th','Fr','Sa'];
+    const first=new Date(year,month,1).getDay(), days=new Date(year,month+1,0).getDate();
+    const today=new Date();
+    let sel=null; if(inp&&inp.value){const d=new Date(inp.value);if(!isNaN(d))sel={y:d.getFullYear(),m:d.getMonth(),d:d.getDate()};}
+    let cells=''; for(let i=0;i<first;i++) cells+=`<div class="cal-day empty"></div>`;
+    for(let d=1;d<=days;d++){
+      const isT=d===today.getDate()&&month===today.getMonth()&&year===today.getFullYear();
+      const isS=sel&&d===sel.d&&month===sel.m&&year===sel.y;
+      cells+=`<div class="cal-day${isT?' is-today':''}${isS?' is-selected':''}" onclick="pickDate('${popupId}',${year},${month},${d})">${d}</div>`;
+    }
+    popup.innerHTML=`<div class="cal-header"><button class="cal-nav" onclick="navCal('${popupId}',event,-1)">&#8249;</button><span>${MN[month]} ${year}</span><button class="cal-nav" onclick="navCal('${popupId}',event,1)">&#8250;</button></div><div class="cal-grid">${DW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}${cells}</div>`;
+  }
+  function navCal(id,e,dir){
+    e.stopPropagation(); calMonth+=dir;
+    if(calMonth>11){calMonth=0;calYear++} if(calMonth<0){calMonth=11;calYear--}
+    buildCal(id, document.getElementById(id)?.previousElementSibling, calYear, calMonth);
+  }
+  function pickDate(popupId,year,month,day){
+    const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const inp=document.getElementById(popupId)?.previousElementSibling;
+    if(inp) inp.value=`${MN[month]} ${day}, ${year}`; closeCals();
+  }
+  document.addEventListener('click', e=>{ if(!e.target.closest('.cal-wrap')) closeCals(); });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadPersisted();
+  document.getElementById('meta').textContent = '';
+  if (cfg.binId) {
+    setStatus('busy','Loading…');
+    loadBin();
+  } else {
+    setStatus('ok','No schedule configured yet');
+    document.getElementById('meta').textContent = '';
+    render();
+  }
 </script>
 </body>
 </html>
