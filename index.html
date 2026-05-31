@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Book Club Schedule</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/tabler-icons.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, sans-serif; background: #f7f7f5; color: #1a1a1a; min-height: 100vh; }
@@ -77,33 +78,24 @@
     <h1>📚 Book Club Schedule<span class="badge-admin" id="admin-badge" style="display:none">Admin</span></h1>
     <button class="btn-admin" id="admin-toggle" onclick="toggleAdmin()">Admin</button>
   </div>
-  <p class="meta" id="meta">Loading schedule…</p>
+  <p class="meta" id="meta"></p>
 
-  <!-- ADMIN: config panel -->
+  <!-- CONFIG PANEL -->
   <div class="panel" id="cfg-panel" style="display:none">
     <h3>⚙️ Configuration</h3>
     <div class="sf">
       <label>JSONBin Master API Key</label>
       <input type="password" id="cfg-key" placeholder="$2a$10$..." />
-      <p class="hint">Stored in your browser only — never sent anywhere except JSONBin.</p>
+      <p class="hint">Stored in your browser only.</p>
     </div>
     <div class="sf">
       <label>JSONBin Bin ID</label>
       <input type="text" id="cfg-binid" placeholder="6a1b6290ddf5aa59f779c5ed" />
-      <p class="hint">Leave blank to auto-create a new bin on first save.</p>
+      <p class="hint">Leave blank to auto-create on first save.</p>
     </div>
     <div class="sf">
       <label>This page's URL (included in notification emails)</label>
       <input type="text" id="cfg-pageurl" placeholder="https://yourusername.github.io/book-club/" />
-    </div>
-    <div class="sf">
-      <label>Send notifications from (your Gmail address)</label>
-      <input type="text" id="cfg-from" placeholder="you@gmail.com" />
-    </div>
-    <div class="sf">
-      <label>Anthropic API Key (for Gmail notifications)</label>
-      <input type="password" id="cfg-anthropic" placeholder="sk-ant-..." />
-      <p class="hint">Get yours at console.anthropic.com. Never stored.</p>
     </div>
     <div class="sf">
       <label>Recipients — press Enter after each email</label>
@@ -116,7 +108,7 @@
     </div>
   </div>
 
-  <!-- ADMIN: add row form -->
+  <!-- ADD ROW FORM -->
   <div id="add-section" style="display:none">
     <div class="add-form">
       <div class="field">
@@ -171,24 +163,29 @@
 <div id="toast" class="toast"></div>
 
 <script>
-  // ── State ────────────────────────────────────────────────────────────────
+  // ── EmailJS config (hardcoded) ────────────────────────────────────────────
+  const EMAILJS_SERVICE_ID  = 'service_qogj6ym';
+  const EMAILJS_TEMPLATE_ID = 'template_5k25ppp';
+  const EMAILJS_PUBLIC_KEY  = 'g2tRBRSt_6Jf-2V6h';
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  // ── State ─────────────────────────────────────────────────────────────────
   let rows = [], changes = [], editIdx = null, saving = false, isAdmin = false;
-  let cfg = { key:'', binId:'', pageUrl:'', from:'', anthropicKey:'', recipients:[] };
+  let cfg = { key:'', binId:'', pageUrl:'', recipients:[] };
   let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 
-  // ── Persist (non-sensitive only) ─────────────────────────────────────────
+  // ── Persist ───────────────────────────────────────────────────────────────
   function persist() {
-    try { localStorage.setItem('bc_v4', JSON.stringify({ binId:cfg.binId, pageUrl:cfg.pageUrl, from:cfg.from, recipients:cfg.recipients })); } catch(e){}
+    try { localStorage.setItem('bc_v4', JSON.stringify({ binId:cfg.binId, pageUrl:cfg.pageUrl, recipients:cfg.recipients })); } catch(e){}
   }
   function loadPersisted() {
     try {
       const s = JSON.parse(localStorage.getItem('bc_v4') || '{}');
-      cfg.binId = s.binId || ''; cfg.pageUrl = s.pageUrl || '';
-      cfg.from = s.from || ''; cfg.recipients = s.recipients || [];
+      cfg.binId = s.binId || ''; cfg.pageUrl = s.pageUrl || ''; cfg.recipients = s.recipients || [];
     } catch(e){}
   }
 
-  // ── Admin toggle ─────────────────────────────────────────────────────────
+  // ── Admin toggle ──────────────────────────────────────────────────────────
   function toggleAdmin() {
     isAdmin = !isAdmin;
     document.getElementById('admin-badge').style.display = isAdmin ? '' : 'none';
@@ -200,13 +197,11 @@
     render();
   }
 
-  // ── Config ───────────────────────────────────────────────────────────────
+  // ── Config ────────────────────────────────────────────────────────────────
   function openConfig() {
     document.getElementById('cfg-key').value = cfg.key || '';
     document.getElementById('cfg-binid').value = cfg.binId || '';
     document.getElementById('cfg-pageurl').value = cfg.pageUrl || window.location.href;
-    document.getElementById('cfg-from').value = cfg.from || '';
-    document.getElementById('cfg-anthropic').value = cfg.anthropicKey || '';
     renderChips();
     document.getElementById('cfg-panel').style.display = 'block';
   }
@@ -214,14 +209,11 @@
     cfg.key = document.getElementById('cfg-key').value.trim();
     cfg.binId = document.getElementById('cfg-binid').value.trim();
     cfg.pageUrl = document.getElementById('cfg-pageurl').value.trim() || window.location.href;
-    cfg.from = document.getElementById('cfg-from').value.trim();
-    cfg.anthropicKey = document.getElementById('cfg-anthropic').value.trim();
     persist();
     document.getElementById('cfg-panel').style.display = 'none';
     showToast('Configuration saved');
     if (cfg.binId && cfg.key) loadBin();
   }
-
   function handleRecipKey(e) {
     if (e.key === 'Enter') {
       const v = e.target.value.trim();
@@ -236,13 +228,13 @@
 
   // ── Status / Toast ────────────────────────────────────────────────────────
   function setStatus(s, t) {
-    document.getElementById('sdot').className = 'dot dot-' + (s==='ok'?'ok':s==='busy'?'busy':'err');
+    document.getElementById('sdot').className = 'dot dot-'+(s==='ok'?'ok':s==='busy'?'busy':'err');
     document.getElementById('stxt').textContent = t;
   }
   let toastT = null;
   function showToast(m, d=3500) {
     const el = document.getElementById('toast'); el.textContent = m; el.style.display = 'block';
-    clearTimeout(toastT); toastT = setTimeout(() => el.style.display='none', d);
+    clearTimeout(toastT); toastT = setTimeout(()=>el.style.display='none', d);
   }
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -317,8 +309,8 @@
       rows = data.record.rows || [];
       const upd = data.record.updatedAt ? new Date(data.record.updatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'}) : null;
       document.getElementById('updated-label').textContent = upd ? 'Last updated: '+upd : '';
-      setStatus('ok', rows.length + ' meeting' + (rows.length!==1?'s':'') + ' scheduled');
-      document.getElementById('meta').textContent = rows.length + ' meeting' + (rows.length!==1?'s':'') + ' scheduled';
+      document.getElementById('meta').textContent = rows.length + ' meeting'+(rows.length!==1?'s':'')+' scheduled';
+      setStatus('ok', rows.length + ' meeting'+(rows.length!==1?'s':'')+' scheduled');
     } catch(e) { setStatus('err','Could not load schedule'); }
     render();
   }
@@ -334,16 +326,36 @@
     }
   }
 
-  // ── Email ─────────────────────────────────────────────────────────────────
-  function buildEmailContent(dateStr, cl) {
-    const htmlRows = rows.map(r=>`<tr><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.date)}</td><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.host)}</td><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.book)}</td><td style="padding:7px 11px;border:1px solid #ddd">${esc(r.leader)}</td></tr>`).join('');
-    const htmlTable = `<table style="border-collapse:collapse;font-size:14px;font-family:sans-serif"><thead><tr><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Date</th><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Host</th><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Book</th><th style="padding:7px 11px;border:1px solid #ddd;background:#f4f4f2;text-align:left">Leader</th></tr></thead><tbody>${htmlRows}</tbody></table>`;
-    const linkHtml = cfg.pageUrl ? `<p style="font-family:sans-serif;font-size:13px;margin-top:14px;color:#555">View online: <a href="${esc(cfg.pageUrl)}">${esc(cfg.pageUrl)}</a></p>` : '';
-    const htmlBody = `<p style="font-family:sans-serif;font-size:14px">Changes made to:</p><ul style="font-family:sans-serif;font-size:14px">${cl.map(c=>`<li>${esc(c)}</li>`).join('')}</ul><p style="font-family:sans-serif;font-size:14px;margin-top:14px"><strong>Current schedule:</strong></p>${htmlTable}${linkHtml}<p style="font-family:sans-serif;font-size:12px;color:#999;margin-top:20px">— Book Club Schedule</p>`;
-    const pad = (s,w) => String(s).padEnd(w).slice(0,w);
-    const plainTable = [['Date','Host','Book','Leader'].map((h,i)=>pad(h,[14,14,28,14][i])).join('  '), '-'.repeat(74), rows.map(r=>[r.date,r.host,r.book,r.leader].map((v,i)=>pad(v||'',[14,14,28,14][i])).join('  ')).join('\n')].join('\n');
-    const plainBody = `Changes made to:\n• ${cl.join('\n• ')}\n\nCurrent schedule:\n\n${plainTable}${cfg.pageUrl?'\nView online: '+cfg.pageUrl:''}\n\n— Book Club Schedule`;
-    return { subject:`Book Club Schedule Update : ${dateStr}`, htmlBody, plainBody };
+  // ── EmailJS sending ───────────────────────────────────────────────────────
+  function buildTableText() {
+    const pad = (s,w) => String(s||'').padEnd(w).slice(0,w);
+    const header = ['Date','Host','Book','Leader'].map((h,i)=>pad(h,[14,14,28,14][i])).join('  ');
+    const divider = '-'.repeat(74);
+    const body = rows.map(r=>[r.date,r.host,r.book,r.leader].map((v,i)=>pad(v||'',[14,14,28,14][i])).join('  ')).join('\n');
+    return [header, divider, body].join('\n');
+  }
+
+  async function sendEmails(dateStr, cl) {
+    const subject = `Book Club Schedule Update : ${dateStr}`;
+    const tableText = buildTableText();
+    const changeText = cl.map(c => '• ' + c).join('\n');
+    const pageLink = cfg.pageUrl ? `\nView the schedule online: ${cfg.pageUrl}` : '';
+    const message = `Changes made to:\n${changeText}\n\nCurrent schedule:\n\n${tableText}${pageLink}\n\n— Book Club Schedule`;
+
+    let allOk = true;
+    for (const recipient of cfg.recipients) {
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: recipient,
+          subject:  subject,
+          message:  message
+        });
+      } catch(e) {
+        console.error('EmailJS error for ' + recipient + ':', e);
+        allOk = false;
+      }
+    }
+    return allOk;
   }
 
   // ── Save & Notify ─────────────────────────────────────────────────────────
@@ -353,47 +365,33 @@
     saving = true; document.getElementById('save-btn').disabled = true;
     const dateStr = new Date().toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'});
     const cl = changes.length ? [...changes] : ['Minor update'];
+
     setStatus('busy','Saving…');
     try {
       await saveBin(); changes = [];
       document.getElementById('updated-label').textContent = 'Last updated: '+dateStr;
       setStatus('ok','Saved ✓');
-      showToast('Saved to JSONBin ✓');
     } catch(e) {
       setStatus('err','Save failed: '+e.message);
       showToast('Save failed: '+e.message, 5000);
       saving=false; document.getElementById('save-btn').disabled=false; return;
     }
-    if (cfg.recipients.length && cfg.anthropicKey) {
-      await sendEmail(dateStr, cl);
-    } else if (cfg.recipients.length && !cfg.anthropicKey) {
-      showToast('Saved. Add your Anthropic API key in Configure to enable email notifications.', 5000);
-    } else {
-      showToast('Saved. Add recipients in Configure to enable email notifications.');
-    }
-    saving=false; document.getElementById('save-btn').disabled=false;
-  }
 
-  async function sendEmail(dateStr, cl) {
-    setStatus('busy','Sending email…');
-    const { subject, htmlBody, plainBody } = buildEmailContent(dateStr, cl);
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':cfg.anthropicKey,'anthropic-version':'2023-06-01'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514', max_tokens:1000,
-          system:'Send the email via Gmail MCP. Reply ONLY with JSON: {"success":true} or {"success":false}. No markdown.',
-          messages:[{role:'user',content:`Send via Gmail:\nTo: ${cfg.recipients.join(', ')}\nFrom: ${cfg.from}\nSubject: ${subject}\nPlain body:\n${plainBody}\nHTML body:\n${htmlBody}\nJSON reply only.`}],
-          mcp_servers:[{type:'url',url:'https://gmailmcp.googleapis.com/mcp/v1',name:'gmail-mcp'}]
-        })
-      });
-      const data = await res.json();
-      const raw = (data.content?.find(b=>b.type==='text')?.text||'').replace(/```json|```/g,'').trim();
-      let ok=false; try{ok=JSON.parse(raw)?.success}catch(e){ok=raw.includes('"success":true')||raw.toLowerCase().includes('sent')}
-      if (ok) { setStatus('ok',`Saved & emailed ${cfg.recipients.length} recipient(s) ✓`); showToast(`Notified ${cfg.recipients.length} recipient(s) ✓`,4000); }
-      else { setStatus('err','Email uncertain'); showToast('Saved. Email delivery uncertain — check Gmail sent folder.',5000); }
-    } catch(e) { setStatus('err','Email error'); showToast('Saved. Email failed: '+e.message,5000); }
+    if (cfg.recipients.length) {
+      setStatus('busy', 'Sending emails…');
+      const ok = await sendEmails(dateStr, cl);
+      if (ok) {
+        setStatus('ok', `Saved & emailed ${cfg.recipients.length} recipient(s) ✓`);
+        showToast(`Saved & notified ${cfg.recipients.length} recipient(s) ✓`, 4000);
+      } else {
+        setStatus('err', 'Saved, but some emails failed');
+        showToast('Saved. Some emails may not have delivered — check your EmailJS dashboard.', 5000);
+      }
+    } else {
+      showToast('Saved! Add recipients in Configure to enable email notifications.');
+    }
+
+    saving=false; document.getElementById('save-btn').disabled=false;
   }
 
   // ── Download for printing ─────────────────────────────────────────────────
@@ -415,8 +413,7 @@
     const popup=document.getElementById(popupId); if(!popup) return;
     const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
     const DW=['Su','Mo','Tu','We','Th','Fr','Sa'];
-    const first=new Date(year,month,1).getDay(), days=new Date(year,month+1,0).getDate();
-    const today=new Date();
+    const first=new Date(year,month,1).getDay(), days=new Date(year,month+1,0).getDate(), today=new Date();
     let sel=null; if(inp&&inp.value){const d=new Date(inp.value);if(!isNaN(d))sel={y:d.getFullYear(),m:d.getMonth(),d:d.getDate()};}
     let cells=''; for(let i=0;i<first;i++) cells+=`<div class="cal-day empty"></div>`;
     for(let d=1;d<=days;d++){
@@ -440,13 +437,12 @@
 
   // ── Init ──────────────────────────────────────────────────────────────────
   loadPersisted();
-  document.getElementById('meta').textContent = '';
   if (cfg.binId) {
-    setStatus('busy','Loading…');
-    loadBin();
+    // key not persisted — prompt admin to configure
+    setStatus('ok', 'Click Admin → Configure to load your schedule');
+    render();
   } else {
-    setStatus('ok','No schedule configured yet');
-    document.getElementById('meta').textContent = '';
+    setStatus('ok', 'Click Admin → Configure to get started');
     render();
   }
 </script>
